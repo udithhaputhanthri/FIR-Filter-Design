@@ -22,10 +22,9 @@ T=2*pi/Os;
 %%%
 
 delta_p= (10^(0.05*Ap)-1)/(10^(0.05*Ap)+1);
-delta_a= 10^(-0.05*Ap);
-delta=min([delta_p,delta_a]);
-
-Aa=-20*log(delta);
+delta_a= 10^(-0.05*Aa);
+delta=min(delta_p,delta_a);
+Aa=-20*log10(delta);
 
 if Aa<=21
     alpha=0;
@@ -41,7 +40,7 @@ end
 N=ceil(Os*D/Bt+1)+~mod(ceil(Os*D/Bt+1),2);
 
 %%%%%%%%%%%%%%
-n=[-(N-1)/2:(N-1)/2];
+n=[-(N-1)/2:1:(N-1)/2];
 %%%%%%%%%%%%%%
 
 beta=alpha*(1-((2.*n)./(N-1)).^2).^0.5;
@@ -54,67 +53,103 @@ w= I_note(beta,inf_)./I_note(alpha,inf_);
 
 h=w.*h_d;
 
-m=1;m_=3;
 figure;
-subplot(m,m_,1);
 stem(w);
-title('window (Question_1)');
-subplot(m,m_,2);
-stem(h_d);
-%plot(interp1(h_d,n));
-title('h_d');
-subplot(m,m_,3);
-stem(h);
-title('h (Question_2)');
-hold;
+title('Kaiser Window - Time Domain');
+xlabel('n');
+ylabel('Amplitude');
 figure;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-freqz(h_d,1);
+stem(h);
+title('Kaiser Window - Filter Causal Impulse Response- Time Domain');
+xlabel('n');
+ylabel('Amplitude');
+hold;
 [H, H_freq_DT]=freqz(h,1);
 freq=H_freq_DT*Os/(2*pi);
-subplot(2,2,1);
-plot(freq,abs(H));
-xlabel('Frequency')
-ylabel('Amplitude')
-title('Kaiser Window - Freq Response');
-
-subplot(2,2,2);
+figure;
 H_mag_log=20*log10(abs(H));
 plot(freq,H_mag_log);
-xlabel('Frequency')
-ylabel('Amplitude (dB)')
-title('Kaiser Window - Freq Response (Question_3,4)');
+xlabel('Frequency');
+ylabel('Amplitude (dB)');
+title('Kaiser Window - Filter Magnitude Response- Frequency domain');
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% 2----ANOTHER TWO PLOTS - LOW/HIGH ...
+w_rect=[];
+%h_rect=w_rect.*h_d;
+h_rect=h_d;
+figure;
+stem(h_rect);
+title('Rectangular Window - Filter Causal Impulse Response- Time Domain');
+xlabel('n');
+ylabel('Amplitude');
+hold;
+[H_rect, H_freq_DT_rect]=freqz(h_rect,1);
+freq_rect=H_freq_DT_rect*Os/(2*pi);
+figure;
+H_mag_log_rect=20*log10(abs(H_rect));
+plot(freq_rect,H_mag_log_rect);
+xlabel('Frequency');
+ylabel('Amplitude (dB)');
+title('Rectangular Window - Filter Magnitude Response- Frequency domain');
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-O1=Oc1/2;
+%%%%%%%%%%%%%%%%%%%%%%% INPUT - OUTPUT
+O1=Oc1/2; 
 O2=(Oc1+Oc2)/2;
 O3=(Oc2+Os/2)/2;
-k=[1:length(H)]; %%%%%%%%%%% CORRECT THISS !!!!!!!!!!!!
-x=cos(O1*T*k)+cos(O2*T*k)+cos(O3*T*k);
+width=[1:500]; 
+x=cos(O1*T*width)+cos(O2*T*width)+cos(O3*T*width);
+x_ideal=cos(O1*T*width)+cos(O3*T*width);
 
-
-%figure;
-%subplot(1,2,1);
-%stem(x);
 figure;
-subplot(1,2,1);
 [X,freq_DT]=freqz(x,1);
 freq=freq_DT*Os/(2*pi);
-plot(freq,X)
-xlabel('Frequency')
-ylabel('Amplitude')
-title('X');
-subplot(1,2,2);
+plot(freq,abs(X));
+xlabel('Frequency');
+ylabel('Amplitude');
+title('Input Signal- Frequency Domain');
+
+figure;
+stem(x(25:100));
+xlabel('Time');
+ylabel('Amplitude');
+title('Input Signal- Time Domain');
+
+figure;
 X_filtered=X.*H;
-x_filtered=ifft(X_filtered);
-plot(abs(X_filtered));
-title('X filtered frequencyresponse');
-xlabel('Frequency')
-ylabel('Amplitude')
-hold;
+x_filtered=abs(ifft(X_filtered));
+plot(freq,abs(X_filtered));
+title('Output Signal- Frequency Domain');
+xlabel('Frequency');
+ylabel('Amplitude');
+
+figure;
+[X_ideal,freq_DT_ideal]=freqz(x_ideal,1);
+freq_id=freq_DT_ideal*Os/(2*pi);
+plot(freq_id,abs(X_ideal));
+title('Ideal Output Signal- Frequency Domain');
+xlabel('Frequency');
+ylabel('Amplitude');
+
+figure;
+stem(x_filtered(25:100));
+xlabel('Time');
+ylabel('Amplitude');
+title('Output Signal- Time Domain');
+
+
+
+%%%% Impulse Response by fvtool
+%%%% Freq represetation by fvtool
+fvtool(h);
+
+%%%% Impule Resp-designfilt()
+%%%% Freq resp-designfilt()
+
+bandstop = designfilt('bandstopfir', 'PassbandFrequency1', Op1, 'StopbandFrequency1', Oa1, 'StopbandFrequency2', Oa2, 'PassbandFrequency2', Op2, 'PassbandRipple1', Ap, 'StopbandAttenuation', Aa, 'PassbandRipple2', Ap, 'SampleRate', 4200, 'DesignMethod', 'kaiserwin');
+fvtool(bandstop);
 
 
 
