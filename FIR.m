@@ -11,7 +11,8 @@ Op2=(C * 100) + 950;
 Oa1=(C * 100) + 500;
 Oa2=(C * 100) + 800;
 Os=2*((C * 100) + 1300);
-
+Ap
+Aa
 Bt=min([(Oa1-Op1),(Op2-Oa2)]);
 
 Oc1=Op1+ Bt/2;
@@ -25,7 +26,7 @@ delta_p= (10^(0.05*Ap)-1)/(10^(0.05*Ap)+1);
 delta_a= 10^(-0.05*Aa);
 delta=min(delta_p,delta_a);
 Aa=-20*log10(delta);
-
+Ap=20*log10((1+delta)/(1-delta));
 if Aa<=21
     alpha=0;
     D=0.9222;
@@ -65,6 +66,7 @@ xlabel('n');
 ylabel('Amplitude');
 hold;
 [H, H_freq_DT]=freqz(h,1);
+H_=fft(h);
 freq=H_freq_DT*Os/(2*pi);
 figure;
 H_mag_log=20*log10(abs(H));
@@ -75,6 +77,20 @@ title('Kaiser Window - Filter Magnitude Response- Frequency domain');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% 2----ANOTHER TWO PLOTS - LOW/HIGH ...
+figure;
+plot(freq,H_mag_log);
+axis([800,1300,-0.1,0.1])
+xlabel('Frequency');
+ylabel('Amplitude (dB)');
+title('Kaiser Window - LowerPassband- Magnitude Response');
+figure;
+plot(freq,H_mag_log);
+axis([1600,2100,-0.1,0.1])
+xlabel('Frequency');
+ylabel('Amplitude (dB)');
+title('Kaiser Window - UpperPassband- Magnitude Response');
+
+
 w_rect=[];
 %h_rect=w_rect.*h_d;
 h_rect=h_d;
@@ -99,7 +115,7 @@ title('Rectangular Window - Filter Magnitude Response- Frequency domain');
 O1=Oc1/2; 
 O2=(Oc1+Oc2)/2;
 O3=(Oc2+Os/2)/2;
-width=[1:500]; 
+width=[1:1000]; 
 x=cos(O1*T*width)+cos(O2*T*width)+cos(O3*T*width);
 x_ideal=cos(O1*T*width)+cos(O3*T*width);
 
@@ -112,8 +128,8 @@ ylabel('Amplitude');
 title('Input Signal- Frequency Domain');
 
 figure;
-stem(x(25:100));
-xlabel('Time');
+stem(x);
+xlabel('n');
 ylabel('Amplitude');
 title('Input Signal- Time Domain');
 
@@ -133,11 +149,20 @@ title('Ideal Output Signal- Frequency Domain');
 xlabel('Frequency');
 ylabel('Amplitude');
 
+
+
+[u_,d_]=invfreqz(X_filtered,freq_DT,length(x)-1,1);
 figure;
-stem(x_filtered(25:100));
-xlabel('Time');
+subplot(311);stem(x_ideal);
+title('Ideal Output Signal- Time Domain');
+xlabel('n');
 ylabel('Amplitude');
+subplot(312);stem(u_);
 title('Output Signal- Time Domain');
+xlabel('n');
+ylabel('Amplitude');
+axis([0 1000 -2 2]);
+
 
 
 
